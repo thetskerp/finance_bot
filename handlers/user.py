@@ -4,7 +4,7 @@ from aiogram import F, Router
 from aiogram.types import Message
 from aiogram.filters import Command, CommandStart
 
-from database.db import add_user, user_exists, init_user_category,
+from database.db import add_user, user_exists, init_user_category
 from config.config import Config
 
 from lexicon.lexicon import Lexicon_RU

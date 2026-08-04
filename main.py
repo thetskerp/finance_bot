@@ -5,15 +5,14 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
-from aiogram.client.telegram import TelegramAPIServer
 
 
 from config.config import Config, load_config
 from handlers.user import user_router
 from database.db import init_db
 
-async def main():
 
+async def main():
     config: Config = load_config()
 
     logging.basicConfig(

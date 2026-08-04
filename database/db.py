@@ -29,14 +29,14 @@ def init_db(db_name: str):
 
     cursor.execute(
         """
-    CREATE TABLE IF NOT WXISTS expenses (
+    CREATE TABLE IF NOT EXISTS expenses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
     category_id INTEGER,
     amount REAL NOT NULL,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (category_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (category_id) REFERENCES users(id) ON DELETE CASCADE
     )
 """
     )
