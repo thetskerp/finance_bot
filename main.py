@@ -4,14 +4,16 @@ import logging
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
-from aiogram.enums import parse_mode
+from aiogram.enums import ParseMode
+from aiogram.client.telegram import TelegramAPIServer
 
 
 from config.config import Config, load_config
 from handlers.user import user_router
-
+from database.db import init_db
 
 async def main():
+
     config: Config = load_config()
 
     logging.basicConfig(
@@ -21,12 +23,20 @@ async def main():
 
     logging.info('Starting BOT')
 
+    init_db(config.db.db_name)
+
+    #local_telegram_server = TelegramAPIServer.from_base(config.proxy_session.session)
+
     bot = Bot(
         token=config.bot.token,
-        default=DefaultBotProperties(parse_mode.HTML)
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML),
+        #server = local_telegram_server,
     )
 
+    
+
     dp = Dispatcher()
+    dp['config'] = config
     dp.include_router(user_router)
 
     await bot.delete_webhook(drop_pending_updates=True)

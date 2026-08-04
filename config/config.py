@@ -15,10 +15,17 @@ class DatabaseSettings:
     db_name: str
 
 @dataclass
+class Session:
+    session: str
+
+@dataclass
 class Config:
     bot: TgBot
     log: LogSettings
     db: DatabaseSettings
+    proxy_session: Session
+
+
 
 
 def load_config():
@@ -28,7 +35,10 @@ def load_config():
     return Config(
         bot = TgBot(token=env('BOT_TOKEN')),
         log = LogSettings(level=env('LOG_LEVEL'), format=env('LOG_FORMAT')),
-        db=DatabaseSettings(
+        db = DatabaseSettings(
             db_name=env('DB_NAME', default='finance_bot.db')
+        ),
+        proxy_session = Session(
+            session=env('proxy_session')
         )
     )
