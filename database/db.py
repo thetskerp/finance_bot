@@ -70,7 +70,7 @@ def user_exists(db_name: str, user_id: int) -> bool:
     return row is not None
 
 
-def init_user_category(db_name: str, user_id: int):
+def init_user_categories(db_name: str, user_id: int):
     default_categories = [
         (user_id, 'Продукты'),
         (user_id, 'Транспорт'),
