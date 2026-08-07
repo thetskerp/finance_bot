@@ -39,7 +39,4 @@ async def process_command_help(message: Message):
 async def process_add_button(message: Message):
     await message.answer(text='Введите сумму и категорию через пробел, например 500 Продукты')
 
-    parts = message.text.split(maxsplit=1)
-
-    if len(parts) < 2:
-        await message.answer(text=)
+    
