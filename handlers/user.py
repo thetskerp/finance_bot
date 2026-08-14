@@ -4,7 +4,7 @@ from aiogram import F, Router
 from aiogram.types import Message
 from aiogram.filters import Command, CommandStart
 
-from database.db import add_user, user_exists, init_user_categories
+from database.db import add_user, user_exists, init_user_categories, add_transaction
 from config.config import Config
 from keyboards.main_menu_kb import get_main_menu_kb
 
