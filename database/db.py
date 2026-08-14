@@ -88,3 +88,17 @@ def init_user_categories(db_name: str, user_id: int):
 
     conn.commit()
     conn.close()
+
+def add_transaction(db_name: str, user_id: int, username: str, trans_type:str, category: str, amount: float, currency: str = 'Рубль'):
+    conn = sqlite3.connect(db_name)
+    cursor = conn.cursor()
+
+    query = """
+    INSERT INTO financial_lead (id, username, type, category, amount, currency)
+    VALUES (?, ?, ?, ?, ?, ?);
+    """
+
+    cursor.execute(query, (user_id, username, trans_type, category, amount, currency))
+    cursor.close()
+    conn.close
+
