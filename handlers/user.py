@@ -5,7 +5,7 @@ from aiogram.types import Message
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 
-from database.db import add_user, user_exists, init_user_categories, add_transaction
+from database.db import add_user, user_exists
 from config.config import Config
 from keyboards.main_menu_kb import get_main_menu_kb
 from handlers.states import FinanceState
@@ -22,7 +22,6 @@ async def process_command_start(message: Message, config: Config):
 
     if not user_exists(db_name, user_id):
         add_user(db_name, user_id)
-        init_user_categories(db_name, user_id)
         print(
             f'Зарегистрирован новый пользователь: {user_id}'
         )
