@@ -7,6 +7,7 @@ from aiogram.filters import Command, CommandStart
 from database.db import add_user, user_exists, init_user_categories, add_transaction
 from config.config import Config
 from keyboards.main_menu_kb import get_main_menu_kb
+from handlers.states import FinanceState
 
 from lexicon.lexicon import Lexicon_RU
 
@@ -36,7 +37,8 @@ async def process_command_help(message: Message):
     await message.answer(text=Lexicon_RU['/help'])
 
 @user_router.message(F.text == Lexicon_RU['добавить'])
-async def process_add_button(message: Message):
+async def process_add_button(message: Message, state: FSM):
+    await
     await message.answer(text='Введите сумму и категорию через пробел, например 500 Продукты')
 
     
