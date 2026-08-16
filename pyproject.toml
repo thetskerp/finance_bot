@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "finance-bot"
+version = "0.1.0"
+description = "Telegram bot for personal finance tracking"
+requires-python = ">=3.12"
+
+dependencies = [
+    "aiogram>=3,<4",
+    "python-dotenv>=1,<2",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8,<9",
+]
+
+[tool.setuptools]
+packages = [
+    "config",
+    "database",
+    "handlers",
+    "keyboards",
+    "lexicon",
+]

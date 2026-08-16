@@ -1,9 +1,16 @@
-.env
-
 .venv/
-.vscode/
 __pycache__/
-.DS_Store/
-.ruff_cache/
+*.py[cod]
 
-.db
+.env
+.env.*
+
+!.env.example
+
+*.db
+*.sqlite
+*.sqlite3
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
