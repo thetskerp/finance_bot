@@ -3,6 +3,7 @@ import asyncio
 from aiogram import F, Router
 from aiogram.types import Message
 from aiogram.filters import Command, CommandStart
+from aiogram.fsm.context import FSMContext
 
 from database.db import add_user, user_exists, init_user_categories, add_transaction
 from config.config import Config
@@ -37,8 +38,16 @@ async def process_command_help(message: Message):
     await message.answer(text=Lexicon_RU['/help'])
 
 @user_router.message(F.text == Lexicon_RU['добавить'])
-async def process_add_button(message: Message, state: FSM):
-    await
-    await message.answer(text='Введите сумму и категорию через пробел, например 500 Продукты')
+async def process_add_button(message: Message, state: FSMContext):
+    await state.set_state(FinanceState.waiting_for_type)
+    await message.answer(text=Lexicon_RU['Текст выбора типа'])
 
-    
+@user_router.message(FinanceState.waiting_for_type)
+async def process_type_selection(message: Message, state: FSMContext):
+    await state.update_data(trans_type=message.text)
+
+
+@user_router.message(FinanceState.waiting_for_category)
+async def process_category_selection(message: Message, state: FSMContext):
+    await state.update_data(FinanceState.waiting_for_category)
+    await message.answer(text=Lexicon_RU['Текст выбора категории'])
