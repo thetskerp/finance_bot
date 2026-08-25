@@ -8,7 +8,7 @@ from aiogram.fsm.context import FSMContext
 from database.db import add_user, user_exists
 from config.config import Config
 from keyboards.main_menu_kb import get_main_menu_kb
-from handlers.states import FinanceState
+from handlers.states import TransactionState
 
 from lexicon.lexicon import Lexicon_RU
 
@@ -38,15 +38,16 @@ async def process_command_help(message: Message):
 
 @user_router.message(F.text == Lexicon_RU['добавить'])
 async def process_add_button(message: Message, state: FSMContext):
-    await state.set_state(FinanceState.waiting_for_type)
+    await state.set_state(TransactionState.waiting_for_type)
     await message.answer(text=Lexicon_RU['Текст выбора типа'])
 
-@user_router.message(FinanceState.waiting_for_type)
+@user_router.message(TransactionState.waiting_for_type)
 async def process_type_selection(message: Message, state: FSMContext):
-    await state.update_data(trans_type=message.text)
+    await state.update_data(transaction_type=message.text)
+    await state.set_state(TransactionState.waiting_for_category)
 
 
-@user_router.message(FinanceState.waiting_for_category)
+@user_router.message(TransactionState.waiting_for_category)
 async def process_category_selection(message: Message, state: FSMContext):
-    await state.update_data(FinanceState.waiting_for_category)
+    await state.update_data(TransactionState.waiting_for_category)
     await message.answer(text=Lexicon_RU['Текст выбора категории'])
