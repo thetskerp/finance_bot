@@ -1,5 +1,3 @@
-import asyncio
-
 from aiogram import F, Router
 from aiogram.types import Message
 from aiogram.filters import Command, CommandStart
@@ -44,7 +42,7 @@ async def process_add_button(message: Message, state: FSMContext):
     await state.set_state(TransactionState.waiting_for_type)
 
     await message.answer(
-        text=Lexicon_RU['Текст. выбора типа'],
+        text=Lexicon_RU['Текст выбора типа'],
         reply_markup=get_transaction_type_kb(),
     )
 
@@ -61,6 +59,7 @@ async def process_type_selection(message: Message, state: FSMContext):
         await message.answer(
             "Пожалуйста, введите 'Доход' или 'Расход'"
         )
+        return
 
     await state.update_data(transaction_type=transaction_type)
     await state.set_state(TransactionState.waiting_for_category)
@@ -69,7 +68,4 @@ async def process_type_selection(message: Message, state: FSMContext):
     )
 
 
-@user_router.message(TransactionState.waiting_for_category)
-async def process_category_selection(message: Message, state: FSMContext):
-    await state.update_data(TransactionState.waiting_for_category)
-    await message.answer(text=Lexicon_RU['Текст выбора категории'])
+
