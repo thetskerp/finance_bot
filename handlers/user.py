@@ -51,8 +51,8 @@ async def process_add_button(message: Message, state: FSMContext):
 @user_router.message(TransactionState.waiting_for_type)
 async def process_type_selection(message: Message, state: FSMContext):
     transaction_types = {
-        "Доход": "income",
-        "Расход": "expense",
+        Lexicon_RU["Доход"]: "income",
+        Lexicon_RU["Расход"]: "expense",
     }
 
     transaction_type = transaction_types.get(message.text)
