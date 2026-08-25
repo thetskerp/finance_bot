@@ -44,18 +44,10 @@ async def process_command_help(message: Message):
 async def process_add_button(
     message: Message,
     state: FSMContext,
-    config: Config,
 ):
     
     
     await state.set_state(TransactionState.waiting_for_type)
-
-    db_name = config.db.db_name
-    user_id = message.from_user.id
-    categories = get_categories(
-        db_name,
-        user_id,
-    )
 
     await message.answer(
         text=Lexicon_RU['Текст выбора типа'],
@@ -63,7 +55,11 @@ async def process_add_button(
     )
 
 @user_router.message(TransactionState.waiting_for_type)
-async def process_type_selection(message: Message, state: FSMContext):
+async def process_type_selection(
+    message: Message, 
+    state: FSMContext, 
+    config: Config,
+):
     transaction_types = {
         Lexicon_RU["Доход"]: "income",
         Lexicon_RU["Расход"]: "expense",
@@ -79,6 +75,14 @@ async def process_type_selection(message: Message, state: FSMContext):
 
     await state.update_data(transaction_type=transaction_type)
     await state.set_state(TransactionState.waiting_for_category)
+
+    categories = get_categories(
+        config.db.db_name,
+        message.from_user.id,
+    )
+
+    reply_markup=get_categories(categories)
+
     await message.answer(
         text=Lexicon_RU["Текст выбора категории"]
     )

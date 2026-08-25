@@ -10,7 +10,7 @@ def get_category_kb(
     for category_id, category_name in categories:
         builder.button(
             text=category_name,
-            callback_data=f'categoty:{category_id}'
+            callback_data=f'category:{category_id}'
         )
 
     builder.adjust(1)
