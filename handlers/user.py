@@ -7,7 +7,10 @@ from aiogram.fsm.context import FSMContext
 
 from database.db import add_user, user_exists
 from config.config import Config
+
 from keyboards.main_menu_kb import get_main_menu_kb
+from keyboards.transaction_kb import get_transaction_type_kb
+
 from handlers.states import TransactionState
 
 from lexicon.lexicon import Lexicon_RU
@@ -39,12 +42,31 @@ async def process_command_help(message: Message):
 @user_router.message(F.text == Lexicon_RU['добавить'])
 async def process_add_button(message: Message, state: FSMContext):
     await state.set_state(TransactionState.waiting_for_type)
-    await message.answer(text=Lexicon_RU['Текст выбора типа'])
+
+    await message.answer(
+        text=Lexicon_RU['Текст. выбора типа'],
+        reply_markup=get_transaction_type_kb(),
+    )
 
 @user_router.message(TransactionState.waiting_for_type)
 async def process_type_selection(message: Message, state: FSMContext):
-    await state.update_data(transaction_type=message.text)
+    transaction_types = {
+        "Доход": "income",
+        "Расход": "expense",
+    }
+
+    transaction_type = transaction_types.get(message.text)
+
+    if transaction_type is None:
+        await message.answer(
+            "Пожалуйста, введите 'Доход' или 'Расход'"
+        )
+
+    await state.update_data(transaction_type=transaction_type)
     await state.set_state(TransactionState.waiting_for_category)
+    await message.answer(
+        text=Lexicon_RU["Текст выбора категории"]
+    )
 
 
 @user_router.message(TransactionState.waiting_for_category)
