@@ -1,9 +1,9 @@
 from aiogram import F, Router
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 
-from database.db import add_user, user_exists
+from database.db import add_user, user_exists, get_categories
 from config.config import Config
 
 from keyboards.main_menu_kb import get_main_menu_kb
@@ -11,8 +11,6 @@ from keyboards.transaction_kb import get_transaction_type_kb
 from keyboards.category_kb import get_category_kb
 
 from handlers.states import TransactionState
-
-from database.db import add_user, user_exists, get_categories
 
 from lexicon.lexicon import Lexicon_RU
 
@@ -76,16 +74,59 @@ async def process_type_selection(
     await state.update_data(transaction_type=transaction_type)
     await state.set_state(TransactionState.waiting_for_category)
 
+    db_name = config.db.db_name
+    user_id = message.from_user.id
+
     categories = get_categories(
-        config.db.db_name,
-        message.from_user.id,
+        db_name,
+        user_id,
     )
 
-    reply_markup=get_categories(categories)
+    reply_markup=get_category_kb(categories)
 
     await message.answer(
-        text=Lexicon_RU["Текст выбора категории"]
+        text=Lexicon_RU["Текст выбора категории"],
+        reply_markup=reply_markup
     )
 
 
+@user_router.callback_query(
+        TransactionState.waiting_for_category,
+        F.data.startswith("category:"),
+)
+async def process_category_selection(
+    callback: CallbackQuery,
+    state: FSMContext,
+):
 
+    callback_data = callback.data
+
+    if callback_data is None:
+        await callback.answer(
+            text="Некорректные данные кнопки",
+            show_alert=True,
+        )
+        return
+
+    try:
+        _, category_id_text = callback_data.split(":", maxsplit=1)
+        category_id = int(category_id_text)
+
+    except ValueError:
+        await callback.answer(
+            text="Некорректная категория",
+            show_alert=True,
+        )
+        return
+
+    await state.update_data(category_id=category_id)
+    await state.set_state(TransactionState.waiting_for_amount)
+
+    await callback.answer()
+
+    if callback.message is not None:
+        await callback.message.edit_reply_markup(reply_markup=None)
+
+        await callback.message.answer(
+            text="Введите сумму операции: ",
+        ) 
