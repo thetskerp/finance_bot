@@ -79,6 +79,23 @@ def get_categories(
 
     return rows
 
+def get_category_name(
+    db_name: str,
+    user_id: int,
+    category_id: int,
+) -> str | None:
+    query = """
+        SELECT name
+        FROM categories
+        WHERE id = ?
+        AND user_id = ?
+    """
+    with get_connection(db_name) as conn:
+        category_name = conn.execute(query, (category_id, user_id)).fetchone()
+
+    return category_name[0] if category_name is not None else None
+
+
 def add_transaction(
     db_name: str, 
     user_id: int,

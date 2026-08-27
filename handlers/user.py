@@ -5,7 +5,13 @@ from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
 from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 
-from database.db import add_user, user_exists, get_categories, add_transaction
+from database.db import (
+    add_user, 
+    user_exists, 
+    get_categories, 
+    add_transaction, 
+    get_category_name,
+)
 from config.config import Config
 
 from keyboards.main_menu_kb import get_main_menu_kb
@@ -149,6 +155,7 @@ async def process_category_selection(
 async def process_add_amount(
     message: Message,
     state: FSMContext,
+    config: Config,
 ):
     amount_text = message.text
 
@@ -188,15 +195,32 @@ async def process_add_amount(
     await state.update_data(amount=amount)
     await state.set_state(TransactionState.waiting_for_confirmation)
 
-    await message.answer(
-        text="🧾 Проверьте данные операции перед сохранением:",
-        reply_markup=get_confirmation_kb()
-    )
-
     data = await state.get_data()
 
+    db_name = config.db.db_name
+    user_id = message.from_user.id
+    category_id = data['category_id']
+
+    rubles, kopecks = divmod(data["amount"], 100)
+    rubles_text = f"{rubles:,}".replace(",", " ")
+    amount_text = f"{rubles_text},{kopecks:02d} ₽"
+
+    transaction_type_names = {
+        "income": "🟢 Доход",
+        "expense": "🔴 Расход",
+    }
+
+    transaction_type = transaction_type_names[data['transaction_type']]
+
+    category_name = get_category_name(
+        db_name=db_name,
+        user_id=user_id,
+        category_id=category_id,
+    )
+
     await message.answer(
-        text=f'{data}'
+        text=f"🧾 Проверьте операцию\n\nТип: {transaction_type}\nКатегория: {category_name}\nСумма: {amount_text}",
+        reply_markup=get_confirmation_kb(),
     )
 
 
@@ -230,7 +254,7 @@ async def process_confirm_transaction(
             text="❌ Не удалось сохранить операцию: категория не найдена."
         )
         return
-    
+
     await state.clear()
     await message.answer(
         text="✅ Операция сохранена.",
