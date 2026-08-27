@@ -1,2 +1,0 @@
-aiogram<4,>=3
-python-dotenv<2,>=1
