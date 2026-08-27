@@ -1,3 +1,5 @@
+from decimal import Decimal, InvalidOperation
+
 from aiogram import F, Router
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command, CommandStart
@@ -38,19 +40,19 @@ async def process_command_start(message: Message, config: Config):
 async def process_command_help(message: Message):
     await message.answer(text=Lexicon_RU['/help'])
 
+
 @user_router.message(F.text == Lexicon_RU['добавить'])
 async def process_add_button(
     message: Message,
     state: FSMContext,
 ):
-    
-    
     await state.set_state(TransactionState.waiting_for_type)
 
     await message.answer(
         text=Lexicon_RU['Текст выбора типа'],
         reply_markup=get_transaction_type_kb(),
     )
+
 
 @user_router.message(TransactionState.waiting_for_type)
 async def process_type_selection(
@@ -82,7 +84,7 @@ async def process_type_selection(
         user_id,
     )
 
-    reply_markup=get_category_kb(categories)
+    reply_markup = get_category_kb(categories)
 
     await message.answer(
         text=Lexicon_RU["Текст выбора категории"],
@@ -130,3 +132,48 @@ async def process_category_selection(
         await callback.message.answer(
             text="Введите сумму операции: ",
         ) 
+
+
+@user_router.message(TransactionState.waiting_for_amount)
+async def process_add_amount(
+    message: Message,
+    state: FSMContext,
+):
+    amount_text = message.text
+
+    if amount_text is None:
+        await message.answer(
+            text="Введите сумму текстом."
+        )
+        return
+
+    amount_text = amount_text.strip().replace(",", ".")
+
+    try:
+        amount_rubles = Decimal(amount_text)
+    except InvalidOperation:
+        await message.answer(
+            text="Вы ввели не число\nПожалуйста, введите корректное число",
+        )
+        return
+
+    
+    if not amount_rubles.is_finite() or amount_rubles <= 0:
+        await message.answer(
+            text="Ваша сумма отрицательна или бесконечна\nПожалуйста, введите корректное число",
+        )
+        return
+    
+    amount_rubles_in_kopecks = amount_rubles * 100
+
+    if amount_rubles_in_kopecks.to_integral_value() != amount_rubles_in_kopecks:
+        await message.answer(
+            text="Ваша сумма некорректна, у вас более 2 знаков после запятой\nПожалуйста, введите корректное число",
+        )
+        return
+
+    amount = int(amount_rubles_in_kopecks)
+
+    await state.update_data(amount=amount)
+    await state.set_state(TransactionState.waiting_for_confirmation)
+
