@@ -53,14 +53,16 @@ def add_category(
     db_name: str, 
     user_id: int, 
     name: str,
-) -> None:
+) -> bool:
     query = """
-        INSERT INTO categories (user_id, name)
+        INSERT OR IGNORE INTO categories (user_id, name)
         VALUES (?, ?)
     """
 
     with get_connection(db_name) as conn:
-        conn.execute(query, (user_id, name))
+        cursor = conn.execute(query, (user_id, name))
+
+    return cursor.rowcount == 1
 
 
 def get_categories(

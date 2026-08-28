@@ -6,3 +6,7 @@ class TransactionState(StatesGroup):
     waiting_for_amount = State()
     waiting_for_confirmation = State()
 
+
+class CategoryState(StatesGroup):
+    waiting_for_name = State()
+    waiting_for_delete = State()

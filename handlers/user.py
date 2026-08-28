@@ -11,6 +11,7 @@ from database.db import (
     get_categories, 
     add_transaction, 
     get_category_name,
+    add_category
 )
 from config.config import Config
 
@@ -18,8 +19,9 @@ from keyboards.main_menu_kb import get_main_menu_kb
 from keyboards.transaction_kb import get_transaction_type_kb
 from keyboards.category_kb import get_category_kb
 from keyboards.confirmation_kb import get_confirmation_kb
+from keyboards.category_management_kb import get_category_management_kb
 
-from handlers.states import TransactionState
+from handlers.states import TransactionState, CategoryState
 
 from lexicon.lexicon import Lexicon_RU
 
@@ -336,4 +338,85 @@ async def process_edit_transaction(
     await message.answer(
         text="Введите новую сумму операции",
         reply_markup=ReplyKeyboardRemove(),
+    )
+
+
+@user_router.message(F.text == Lexicon_RU['категории'])
+async def process_category_management(
+    message: Message,
+):
+    await message.answer(
+        text='Управление категориями',
+        reply_markup=get_category_management_kb(),
+    )
+
+
+@user_router.callback_query(
+    F.data == 'category_manage:add',
+)
+async def process_add_category_button(
+    callback: CallbackQuery,
+    state: FSMContext,
+):
+
+    
+    await state.set_state(CategoryState.waiting_for_name)
+    await callback.answer()
+    if callback.message is not None:
+        await callback.message.answer(
+            text="Введите название новой категории:"
+        )
+        await callback.message.edit_reply_markup(reply_markup=None)
+
+
+@user_router.message(
+    CategoryState.waiting_for_name,
+)
+async def process_category_add(
+    state: FSMContext,
+    message: Message,
+    config: Config,
+):
+    db_name = config.db.db_name
+    user_id = message.from_user.id
+
+    
+    category_name = message.text
+
+    if category_name is None:
+        await message.answer(
+            text="Введите название категории текстом"
+        )
+        return
+
+    category_name = category_name.strip()
+
+    if not category_name:
+        await message.answer(
+            text='Название категории не может быть пустым'
+        )
+        return
+
+    if len(category_name) > 50:
+        await message.answer(
+            "Название слишком длинное. Используйте не более 50 символов."
+        )
+        return
+    
+    is_added = add_category(
+        db_name=db_name,
+        user_id=user_id,
+        name=category_name,
+    )
+
+    if not is_added:
+        await message.answer(
+            "Такая категория уже существует. Введите другое название."
+        )
+        return
+
+    await state.clear()
+    await message.answer(
+        text=f"✅ Категория «{category_name}» добавлена.",
+        reply_markup=get_category_management_kb(),
     )

@@ -8,7 +8,8 @@ def get_main_menu_kb() -> ReplyKeyboardMarkup:
 
     builder.button(text=Lexicon_RU['добавить'])
     builder.button(text=Lexicon_RU['статистика'])
+    builder.button(text=Lexicon_RU['категории'])
 
-    builder.adjust(2)
+    builder.adjust(1)
 
     return builder.as_markup(resize_keyboard=True)
