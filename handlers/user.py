@@ -11,7 +11,9 @@ from database.db import (
     get_categories, 
     add_transaction, 
     get_category_name,
-    add_category
+    add_category,
+    delete_category,
+    get_category_transaction_count,
 )
 from config.config import Config
 
@@ -453,9 +455,10 @@ async def process_category_delete_button(
         return
 
     await state.set_state(CategoryState.waiting_for_delete)
+    await callback.answer()
 
     await callback.message.edit_text(
-        text=Lexicon_RU['Выберите категорию удаления'],
+        text=Lexicon_RU['Выберите категорию удаления:'],
         reply_markup=get_category_kb(
             categories=categories,
             delete_category=True,
@@ -538,22 +541,27 @@ async def process_category_delete_confirmation_no(
 
     await callback.message.edit_text(
         text="Меню управления категориями",
-        reply_markup=get_category_management_kb,
+        reply_markup=get_category_management_kb(),
     )
 
 
 @user_router.callback_query(
     CategoryState.waiting_for_delete_confirmation,
-    F.data == "category_delete_confirmation:yes"
+    F.data == "category_delete_confirm:yes"
 )
 async def process_category_delete_confirmation_yes(
     callback: CallbackQuery,
-    state: FSMContext
+    state: FSMContext,
+    config: Config,
 ):
     data = await state.get_data()
 
+    db_name = config.db.db_name
+    user_id = callback.from_user.id
+
     category_id = data.get("delete_category_id")
     category_name = data.get("delete_category_name")
+
 
     if category_id is None:
         await callback.answer(
@@ -562,4 +570,23 @@ async def process_category_delete_confirmation_yes(
         )
         return
 
-    
+    if callback.message is not None:
+        callback.message.edit_text(
+            text="",
+            
+        )
+
+    transaction_count = get_category_transaction_count(
+        db_name=db_name,
+        user_id=user_id,
+        category_id=category_id,
+    )
+
+    if transaction_count == 0:
+        delete_category(
+            db_name=db_name,
+            user_id=user_id,
+            category_id=category_id,
+        )
+
+        await callback.message.edit_text
