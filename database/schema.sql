@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS categories (
     id INTEGER PRIMARY KEY,
     user_id INTEGER NOT NULL,
     name TEXT NOT NULL,
+    is_archived INTEGER NOT NULL DEFAULT 0
+        CHECK (is_archived IN (0, 1)),
 
     FOREIGN KEY (user_id)
         REFERENCES users(telegram_id)
@@ -39,3 +41,9 @@ CREATE TABLE IF NOT EXISTS transactions (
     FOREIGN KEY (category_id)
         REFERENCES categories(id)
 );
+
+CREATE INDEX IF NOT EXISTS idx_transactions_user_created_at
+    ON transactions (user_id, created_at);
+
+CREATE INDEX IF NOT EXISTS idx_transactions_category_id
+    ON transactions (category_id);

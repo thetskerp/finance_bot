@@ -9,5 +9,5 @@ class TransactionState(StatesGroup):
 
 class CategoryState(StatesGroup):
     waiting_for_name = State()
-    waiting_for_delete = State()
-    waiting_for_delete_confirmation = State()
+    waiting_for_archive = State()
+    waiting_for_archive_confirmation = State()

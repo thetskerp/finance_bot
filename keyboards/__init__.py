@@ -1,1 +1,1 @@
-"""Telegram keyboard package."""
+"""Telegram keyboards grouped by feature."""

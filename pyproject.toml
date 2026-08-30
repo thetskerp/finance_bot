@@ -10,7 +10,7 @@ requires-python = ">=3.12"
 
 dependencies = [
     "aiogram>=3,<4",
-    "python-dotenv>=1,<2",
+    "environs>=11,<16",
 ]
 
 [dependency-groups]
