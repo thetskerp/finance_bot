@@ -20,7 +20,7 @@ from keyboards.transaction_kb import get_transaction_type_kb
 from keyboards.category_kb import get_category_kb
 from keyboards.confirmation_kb import get_confirmation_kb
 from keyboards.category_management_kb import get_category_management_kb
-
+from keyboards.category_delete_confirmation_kb import get_category_delete_confirmation_kb
 from handlers.states import TransactionState, CategoryState
 
 from lexicon.lexicon import Lexicon_RU
@@ -420,3 +420,146 @@ async def process_category_add(
         text=f"✅ Категория «{category_name}» добавлена.",
         reply_markup=get_category_management_kb(),
     )
+
+
+@user_router.callback_query(
+    F.data == 'category_manage:delete'
+)
+async def process_category_delete_button(
+    callback: CallbackQuery,
+    state: FSMContext,
+    config: Config,
+):
+    db_name = config.db.db_name
+    user_id = callback.from_user.id
+    
+    await state.set_state(CategoryState.waiting_for_delete)
+    await callback.answer()
+
+    categories = get_categories(
+        db_name=db_name,
+        user_id=user_id,
+    )
+
+    if not categories:
+        await callback.answer(
+            text=Lexicon_RU['Категорий нет'],
+            show_alert=True,
+        )
+        return
+
+    if callback.message is None:
+        await callback.answer()
+        return
+
+    await state.set_state(CategoryState.waiting_for_delete)
+
+    await callback.message.edit_text(
+        text=Lexicon_RU['Выберите категорию удаления'],
+        reply_markup=get_category_kb(
+            categories=categories,
+            delete_category=True,
+        ),
+    )
+
+
+@user_router.callback_query(
+    CategoryState.waiting_for_delete,
+    F.data.startswith('category_delete:')
+)
+async def process_category_delete(
+    callback: CallbackQuery,
+    state: FSMContext,
+    config: Config,
+):
+    callback_data = callback.data
+
+    if callback_data is None:
+        await callback.answer(
+            text=Lexicon_RU["Некорректные данные кнопки"],
+            show_alert=True,
+        )
+        return
+
+    try:
+        _, category_id_text = callback_data.split(":", maxsplit=1)
+        category_id = int(category_id_text)
+    
+    except ValueError:
+        await callback.answer(
+            text="Некорректная категория",
+            show_alert=True,
+        )
+        return
+
+    db_name = config.db.db_name
+    user_id = callback.from_user.id
+    
+    category_name = get_category_name(
+        db_name=db_name,
+        user_id=user_id,
+        category_id=category_id,
+    )
+
+    if category_name is None:
+        await callback.answer(
+            text=Lexicon_RU["Некорректная категория"],
+            show_alert=True,
+        )
+        return
+
+    await state.update_data(
+        delete_category_id=category_id,
+        delete_category_name=category_name,
+    )
+
+    await state.set_state(
+        CategoryState.waiting_for_delete_confirmation
+    )
+
+    await callback.answer()
+    
+    if callback.message is not None:
+        await callback.message.edit_text(
+            text=f"⚠️ Вы действительно хотите удалить категорию «{category_name}»?",
+            reply_markup=get_category_delete_confirmation_kb(),
+        )
+
+@user_router.callback_query(
+    CategoryState.waiting_for_delete_confirmation,
+    F.data == "category_delete_confirm:no"
+)
+async def process_category_delete_confirmation_no(
+    callback: CallbackQuery,
+    state: FSMContext,
+):
+    await state.clear()
+    await callback.answer()
+
+    await callback.message.edit_text(
+        text="Меню управления категориями",
+        reply_markup=get_category_management_kb,
+    )
+
+
+@user_router.callback_query(
+    CategoryState.waiting_for_delete_confirmation,
+    F.data == "category_delete_confirmation:yes"
+)
+async def process_category_delete_confirmation_yes(
+    callback: CallbackQuery,
+    state: FSMContext
+):
+    data = await state.get_data()
+
+    category_id = data.get("delete_category_id")
+    category_name = data.get("delete_category_name")
+
+    if category_id is None:
+        await callback.answer(
+            text='категории нет в базе данных',
+            show_alert=True,
+        )
+        return
+
+    
